@@ -10,6 +10,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark, // 深色模式，符合计算器的风格
+      ),
       home: Calculator(),
     );
   }
@@ -21,39 +24,36 @@ class Calculator extends StatefulWidget {
 }
 
 class _CalculatorState extends State<Calculator> {
-  String _output = '';  // 初始化为空字符串
-  String _input = '';
+  String _input = '';  // 用户输入的内容
+  String _output = ''; // 计算结果
+
   final List<String> buttons = [
-    '7', '8', '9', '/',
-    '4', '5', '6', '*',
-    '1', '2', '3', '-',
-    '0', '.', '=', '+',
-    'C',  // 添加 'C' 按钮用于清除
+    'C', '←', '%', '/',
+    '7', '8', '9', '*',
+    '4', '5', '6', '-',
+    '1', '2', '3', '+',
+    '0', '.', '=', 'C',
   ];
 
   // 异步计算表达式
   Future<void> _calculate(String expression) async {
     try {
-      // 通过异步计算表达式
       final exp = Expression.parse(expression);
       final evaluator = ExpressionEvaluator();
       final result = evaluator.eval(exp, {});
-
-      // 检查结果并更新状态
       setState(() {
         _output = result is double
             ? (result == result.toInt() ? result.toInt().toString() : result.toString())
             : result.toString();
       });
     } catch (e) {
-      // 异常处理
       setState(() {
         _output = 'Error';
       });
     }
   }
 
-  // 更新输入内容
+  // 按钮点击处理
   void _onButtonPressed(String value) {
     setState(() {
       if (value == '=') {
@@ -64,8 +64,12 @@ class _CalculatorState extends State<Calculator> {
         // 清空输入和输出
         _input = '';
         _output = '';
+      } else if (value == '←') {
+        // 删除一个单位
+        _input = _input.isNotEmpty ? _input.substring(0, _input.length - 1) : '';
       } else {
-        _input += value; // 添加数字或符号到输入
+        // 拼接输入
+        _input += value;
       }
     });
   }
@@ -75,6 +79,7 @@ class _CalculatorState extends State<Calculator> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Calculator'),
+        backgroundColor: Colors.black, // 设置背景颜色为黑色
       ),
       body: Column(
         children: [
@@ -83,14 +88,15 @@ class _CalculatorState extends State<Calculator> {
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
+                // 显示当前输入
                 Text(
-                  _input, // 显示当前输入
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  _input,
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
-                // 显示输出，只有计算后才会更新
+                // 显示计算结果
                 Text(
-                  _output.isEmpty ? '' : _output, // 只有当输出不为空时显示结果
-                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+                  _output.isEmpty ? '' : _output,
+                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
             ),
@@ -101,24 +107,30 @@ class _CalculatorState extends State<Calculator> {
               padding: const EdgeInsets.all(16.0),
               itemCount: buttons.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
+                crossAxisCount: 4, // 四列
+                crossAxisSpacing: 12.0,
+                mainAxisSpacing: 12.0,
               ),
               itemBuilder: (context, index) {
+                // 根据按钮类型改变样式
+                Color buttonColor = (buttons[index] == 'C' || buttons[index] == '=' || buttons[index] == '←')
+                    ? Colors.orangeAccent // 特殊按钮使用橙色
+                    : Colors.grey[800]!; // 数字按钮使用深灰色
+
                 return ElevatedButton(
                   onPressed: () => _onButtonPressed(buttons[index]),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.all(20), // 按钮内边距
+                    backgroundColor: buttonColor,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(16), // 圆角按钮
                     ),
                     minimumSize: const Size(80, 80),
+                    elevation: 4, // 阴影
                   ),
                   child: Text(
                     buttons[index],
-                    style: const TextStyle(fontSize: 24, color: Colors.white),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 );
               },
@@ -129,4 +141,3 @@ class _CalculatorState extends State<Calculator> {
     );
   }
 }
-//git remote add origin https://github.com/AloneGentle/flutter-calculator.git
