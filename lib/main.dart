@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark, // 深色模式，符合计算器的风格
+        brightness: Brightness.light, // 亮色模式
       ),
       home: Calculator(),
     );
@@ -27,15 +27,56 @@ class _CalculatorState extends State<Calculator> {
   String _input = '';  // 用户输入的内容
   String _output = ''; // 计算结果
 
-  final List<String> buttons = [
-    'C', '←', '%', '/',
-    '7', '8', '9', '*',
-    '4', '5', '6', '-',
-    '1', '2', '3', '+',
-    '0', '.', '=', 'C',
+  // 定义按钮的配置
+  final List<Map<String, dynamic>> buttons = [
+    {'label': 'C', 'color': Color(0xFF769CDF), 'action': 'clear'},
+    {'label': '←', 'color': Color(0xFF769CDF), 'action': 'backspace'},
+    {'label': '%', 'color': Color(0xFF769CDF), 'action': 'operator'},
+    {'label': '/', 'color': Color(0xFF769CDF), 'action': 'operator'},
+    {'label': '7', 'color': Colors.white, 'action': 'number'},
+    {'label': '8', 'color': Colors.white, 'action': 'number'},
+    {'label': '9', 'color': Colors.white, 'action': 'number'},
+    {'label': '*', 'color': Color(0xFF769CDF), 'action': 'operator'},
+    {'label': '4', 'color': Colors.white, 'action': 'number'},
+    {'label': '5', 'color': Colors.white, 'action': 'number'},
+    {'label': '6', 'color': Colors.white, 'action': 'number'},
+    {'label': '-', 'color': Color(0xFF769CDF), 'action': 'operator'},
+    {'label': '1', 'color': Colors.white, 'action': 'number'},
+    {'label': '2', 'color': Colors.white, 'action': 'number'},
+    {'label': '3', 'color': Colors.white, 'action': 'number'},
+    {'label': '+', 'color': Color(0xFF769CDF), 'action': 'operator'},
+    {'label': '0', 'color': Colors.white, 'action': 'number'},
+    {'label': '.', 'color': Colors.white, 'action': 'number'},
+    {'label': '=', 'color': Color(0xFF769CDF), 'action': 'equals'},
+    {'label': 'C', 'color': Color(0xFF769CDF), 'action': 'clear'},
   ];
 
-  // 异步计算表达式
+  // 处理按键动作
+  void _onButtonPressed(Map<String, dynamic> button) {
+    setState(() {
+      switch (button['action']) {
+        case 'clear':
+          _input = '';
+          _output = '';
+          break;
+        case 'backspace':
+          _input = _input.isNotEmpty ? _input.substring(0, _input.length - 1) : '';
+          break;
+        case 'operator':
+          _input += button['label'];
+          break;
+        case 'number':
+          _input += button['label'];
+          break;
+        case 'equals':
+          _calculate(_input);
+          _input = '';
+          break;
+      }
+    });
+  }
+
+  // 计算表达式
   Future<void> _calculate(String expression) async {
     try {
       final exp = Expression.parse(expression);
@@ -53,33 +94,12 @@ class _CalculatorState extends State<Calculator> {
     }
   }
 
-  // 按钮点击处理
-  void _onButtonPressed(String value) {
-    setState(() {
-      if (value == '=') {
-        // 只有在输入完整式子后点击 '=' 时进行计算
-        _calculate(_input);
-        _input = ''; // 清空输入
-      } else if (value == 'C') {
-        // 清空输入和输出
-        _input = '';
-        _output = '';
-      } else if (value == '←') {
-        // 删除一个单位
-        _input = _input.isNotEmpty ? _input.substring(0, _input.length - 1) : '';
-      } else {
-        // 拼接输入
-        _input += value;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Calculator'),
-        backgroundColor: Colors.black, // 设置背景颜色为黑色
+        backgroundColor: Colors.white, // 设置背景颜色为白色
       ),
       body: Column(
         children: [
@@ -91,12 +111,12 @@ class _CalculatorState extends State<Calculator> {
                 // 显示当前输入
                 Text(
                   _input,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
                 // 显示计算结果
                 Text(
                   _output.isEmpty ? '' : _output,
-                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.black),
                 ),
               ],
             ),
@@ -112,25 +132,21 @@ class _CalculatorState extends State<Calculator> {
                 mainAxisSpacing: 12.0,
               ),
               itemBuilder: (context, index) {
-                // 根据按钮类型改变样式
-                Color buttonColor = (buttons[index] == 'C' || buttons[index] == '=' || buttons[index] == '←')
-                    ? Colors.orangeAccent // 特殊按钮使用橙色
-                    : Colors.grey[800]!; // 数字按钮使用深灰色
-
+                Map<String, dynamic> button = buttons[index];
                 return ElevatedButton(
-                  onPressed: () => _onButtonPressed(buttons[index]),
+                  onPressed: () => _onButtonPressed(button),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(20), // 按钮内边距
-                    backgroundColor: buttonColor,
+                    backgroundColor: button['color'], // 设置每个按钮的背景色
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16), // 圆角按钮
+                      borderRadius: BorderRadius.circular(50), // 圆形按钮
                     ),
                     minimumSize: const Size(80, 80),
                     elevation: 4, // 阴影
                   ),
                   child: Text(
-                    buttons[index],
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    button['label'], // 按钮的标签
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 );
               },
